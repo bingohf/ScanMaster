@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+def shortName ="scan_master"
 
 android {
   compileSdkVersion rootProject.ext.compileSdkVersion
@@ -11,10 +12,42 @@ android {
     versionName "1.0"
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
   }
+
+  lintOptions {
+    abortOnError false
+  }
+  signingConfigs{
+    relase_signing_config{
+      keyAlias "androidrelease"
+      storePassword "ledway"
+      keyPassword "ledway"
+      storeFile file("../ledway.keystore.jks")
+    }
+  }
   buildTypes {
+    debug{
+      versionNameSuffix ".dev"
+    }
+
     release {
       minifyEnabled false
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+      signingConfig signingConfigs.relase_signing_config
+      versionNameSuffix ".prod"
+    }
+  }
+
+  applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+      def outputFile = output.outputFile;
+      if (outputFile != null && outputFile.name.endsWith(".apk")){
+        def fileName = "${shortName}.v${variant.versionName}.apk"
+        output.outputFile = new File(
+            output.outputFile.parent,
+            fileName)
+      }
+
+
     }
   }
 }
