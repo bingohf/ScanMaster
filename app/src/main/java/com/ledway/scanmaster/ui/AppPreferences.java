@@ -16,6 +16,7 @@ import android.preference.PreferenceManager;
 import android.preference.TwoStatePreference;
 import android.support.v7.app.AlertDialog;
 import android.widget.EditText;
+import com.ledway.scanmaster.BuildConfig;
 import com.ledway.scanmaster.MApp;
 import com.ledway.scanmaster.R;
 import com.ledway.scanmaster.data.Settings;
@@ -86,6 +87,7 @@ public class AppPreferences extends PreferenceActivity
       AppPreferences.this.startActivity(intent);
       return true;
     });
+    findPreference("version").setSummary(BuildConfig.VERSION_NAME);
   }
 
   private void setPreference(Preference preference, PreferenceInterface preferenceInterface){

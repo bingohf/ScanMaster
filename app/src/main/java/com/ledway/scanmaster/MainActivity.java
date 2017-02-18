@@ -86,6 +86,9 @@ public class MainActivity extends AppCompatActivity {
   private void receiveCode(String code) {
     if (mCurrEdit != null) {
       mCurrEdit.setText(code);
+      if (mCurrEdit.getId() == R.id.txt_bill_no) {
+        queryBill();
+      } else if (mCurrEdit.getId() == R.id.txt_barcode) queryBarCode();
     }
   }
 
