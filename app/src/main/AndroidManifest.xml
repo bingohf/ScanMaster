@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.ledway.scanmaster">
 
   <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -32,6 +33,11 @@
     </activity>
     <activity android:name=".ui.AppPreferences">
     </activity>
+
+    <activity
+        android:name="com.journeyapps.barcodescanner.CaptureActivity"
+        android:screenOrientation="fullSensor"
+        tools:replace="screenOrientation" />
   </application>
 
 </manifest>
