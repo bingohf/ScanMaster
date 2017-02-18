@@ -35,6 +35,7 @@ public class Settings {
 
   public void setServer(String server) {
     this.server = server;
+    save();
   }
 
   public String getDb() {
@@ -43,6 +44,7 @@ public class Settings {
 
   public void setDb(String db) {
     this.db = db;
+    save();
   }
 
   public String getLine() {
@@ -51,6 +53,7 @@ public class Settings {
 
   public void setLine(String line) {
     this.line = line;
+    save();
   }
 
   public String getReader() {
@@ -59,5 +62,19 @@ public class Settings {
 
   public void setReader(String reader) {
     this.reader = reader;
+    save();
+  }
+
+  private SettingSnap toSnap(){
+    SettingSnap settingSnap = new SettingSnap();
+    settingSnap.server = server;
+    settingSnap.db = db;
+    settingSnap.line = line;
+    settingSnap.reader = reader;
+    return settingSnap;
+  }
+
+  private void save(){
+    spModel.save(toSnap());
   }
 }

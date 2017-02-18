@@ -23,9 +23,9 @@ public class SPModel {
   public SettingSnap loadSetting(){
     SettingSnap settingSnap = new SettingSnap();
     settingSnap.server = sp.getString(AppConstants.SP_SERVER, "www.ledway.com.tw:1433");
-    settingSnap.db = sp.getString(AppConstants.SP_DB, "");
-    settingSnap.line = sp.getString(AppConstants.SP_LINE, "");
-    settingSnap.reader = sp.getString(AppConstants.SP_READER, "");
+    settingSnap.db = sp.getString(AppConstants.SP_DB, "WINUPRFID401");
+    settingSnap.line = sp.getString(AppConstants.SP_LINE, "01");
+    settingSnap.reader = sp.getString(AppConstants.SP_READER, "01");
     return settingSnap;
   }
 
