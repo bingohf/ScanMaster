@@ -21,3 +21,15 @@ allprojects {
 task clean(type: Delete) {
   delete rootProject.buildDir
 }
+
+
+ext {
+  // Sdk and tools
+  minSdkVersion = 18
+  targetSdkVersion = 21
+  compileSdkVersion = 25
+  buildToolsVersion = '25.0.2'
+
+  // App dependencies
+  supportLibraryVersion = '25.1.1'
+}
