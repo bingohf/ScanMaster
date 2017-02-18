@@ -13,7 +13,6 @@ import javax.inject.Singleton;
 @Component(modules ={ AppModule.class})
 public interface AppComponent {
   @ApplicationContext Context context();
-  Settings settings();
   void inject(AppPreferences appPreferences);
-
+  void inject(MainActivity mainActivity);
 }

@@ -12,12 +12,12 @@ public class DBCommand {
   private ConnectionPool connectionPool;
   private String connectionString;
 
-  public void setConnectionString(String connectionString, String... args){
+  public void setConnectionString(String connectionString){
     this.connectionString = connectionString;
   }
 
 
-  public Object execute(String sql)
+  public Object execute(String sql, String... args)
       throws ClassNotFoundException, SQLException, InstantiationException, IllegalAccessException {
     Connection connection = connectionPool.getConnection(connectionString);
     CallableStatement csmt = connection.prepareCall(sql);
