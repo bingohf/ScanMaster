@@ -1,3 +1,48 @@
 <resources>
   <string name="app_name">Scan Master</string>
+  <string name="main_activity_name">威虹資訊RFID工票查詢</string>
+  <string name="barcode">Barcode</string>
+  <string name="barcode.help">C1610550030 or Tag the RFID Card with the same contents</string>
+  <string name="scanner_activity">ZXing Scanner - Full Activity</string>
+  <string name="scanner_fragment_activity">ZXing Scanner - Full Fragment Activity</string>
+  <string name="simple_scanner_activity">ZXing Scanner - Simple Activity</string>
+  <string name="simple_scanner_fragment_activity">ZXing Scanner - Simple Fragment Activity</string>
+  <string name="full_screen_scanner_fragment_activity">ZXing Scanner - Full Screen Fragment Activity</string>
+  <string name="simple_activity_sample">Simple Activity Sample</string>
+  <string name="simple_fragment_sample">Simple Fragment Sample</string>
+  <string name="activity_sample">Full Activity Sample</string>
+  <string name="fragment_sample">Full Fragment Sample</string>
+  <string name="full_screen_sample">Full Screen Fragment Sample</string>
+  <string name="toggle_flash">Flash</string>
+  <string name="flash_on">Flash [ON]</string>
+  <string name="flash_off">Flash [OFF]</string>
+  <string name="auto_focus_on">Auto Focus [ON]</string>
+  <string name="auto_focus_off">Auto Focus [OFF]</string>
+  <string name="formats">Formats</string>
+  <string name="choose_formats">Choose Formats</string>
+  <string name="select_camera">Select a Camera</string>
+  <string name="ok_button">OK</string>
+  <string name="cancel_button">Cancel</string>
+
+
+
+  <string name="setting.line.title">Line(####)</string>
+  <string name="setting.server.title">Server</string>
+  <string name="setting.autoupload.title">自動上傳(Auto Upload)</string>
+  <string name="setting.type.title">Type</string>
+  <string name="empty"/>
+  <string name="invalid_barcode">條碼不全(Invalid Code)</string>
+  <string name="app_version">App Version</string>
+
+
+
+  <string name="wait_a_moment">wait a moment</string>
+
+
+
+  <string name="company">威虹資訊股份有限公司版權所有</string>
+  <string name="company.tel">服務電話: +886222799889</string>
+  <string name="company_short">威虹資訊</string>
+  <string name="setting.db.title">DB</string>
+  <string name="setting.reader.title">Reader</string>
 </resources>
