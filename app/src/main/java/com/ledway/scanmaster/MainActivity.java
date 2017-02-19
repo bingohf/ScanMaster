@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
           vibrator.vibrate(1000);
         }
+        openScan();
       }
     };
     IntentFilter intentFilter = new IntentFilter();
@@ -211,6 +212,10 @@ public class MainActivity extends AppCompatActivity {
   }
 
   @OnClick(R.id.btn_scan) void onBtnScanClick() {
+    openScan();
+  }
+
+  protected void openScan() {
     SerialPort.CleanBuffer();
     CaptureService.scanGpio.openScan();
   }
