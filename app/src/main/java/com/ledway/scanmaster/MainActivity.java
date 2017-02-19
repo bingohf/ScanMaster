@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.serialport.api.SerialPort;
@@ -17,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
   @BindView(R.id.txt_bill_no) EditText mTxtBill;
   @BindView(R.id.txt_barcode) EditText mTxtBarcode;
   @BindView(R.id.prg_loading) View mLoading;
-  @BindView(R.id.txt_response) TextView mTxtResponse;
+  @BindView(R.id.web_response) WebView mWebResponse;
   private DBCommand dbCommand = new DBCommand();
   private CompositeSubscription mSubscriptions = new CompositeSubscription();
   private EditText mCurrEdit;
@@ -243,11 +245,11 @@ public class MainActivity extends AppCompatActivity {
         .subscribeOn(Schedulers.io())
         .doOnSubscribe(() -> {
           mLoading.setVisibility(View.VISIBLE);
-          mTxtResponse.setVisibility(View.GONE);
+          mWebResponse.setVisibility(View.GONE);
         })
         .doOnUnsubscribe(() -> {
           mLoading.setVisibility(View.GONE);
-          mTxtResponse.setVisibility(View.VISIBLE);
+          mWebResponse.setVisibility(View.VISIBLE);
         })
         .unsubscribeOn(AndroidSchedulers.mainThread())
         .observeOn(AndroidSchedulers.mainThread())
@@ -270,7 +272,9 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void showDetail(String s) {
-    mTxtResponse.setText(s);
+    Timber.v(s);
+    mWebResponse.loadData(s,"text/html; charset=utf-8","UTF-8");
+    mWebResponse.setBackgroundColor(Color.parseColor("#eeeeee"));
     alertWarning(s);
   }
 
