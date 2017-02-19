@@ -1,1 +1,2 @@
-include ':app', ':rxbus', ':zkc', 'framework'
+
+include ':app', ':rxbus', ':zkc'
