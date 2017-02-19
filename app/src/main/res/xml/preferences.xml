@@ -23,7 +23,7 @@
         android:summary="Please provide cloud server"
         android:shouldDisableView="false">
         ></Preference>
-    
+
     <Preference
         android:key="about"
         android:shouldDisableView="false"

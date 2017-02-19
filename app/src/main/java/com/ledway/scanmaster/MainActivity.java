@@ -31,8 +31,10 @@ import com.ledway.scanmaster.data.DBCommand;
 import com.ledway.scanmaster.data.Settings;
 import com.ledway.scanmaster.ui.AppPreferences;
 import com.zkc.Service.CaptureService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
@@ -82,7 +84,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
           vibrator.vibrate(1000);
         }
-        openScan();
+        mSubscriptions.add(Observable.timer(2, TimeUnit.SECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(l -> openScan()));
       }
     };
     IntentFilter intentFilter = new IntentFilter();
@@ -193,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
   @OnEditorAction({ R.id.txt_barcode, R.id.txt_bill_no }) boolean onEditAction(TextView view,
       int actionId, KeyEvent keyEvent) {
-    if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+    if (actionId == EditorInfo.IME_ACTION_SEARCH || keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
       switch (view.getId()) {
         case R.id.txt_bill_no: {
           queryBill();

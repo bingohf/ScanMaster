@@ -75,7 +75,7 @@ public class CaptureService extends Service {
 			// TODO Auto-generated method stub
 			String barCodeStr = msg.obj.toString();
 			////barCodeStr=barCodeStr.trim();
-
+			Log.v("barcode:" , barCodeStr);
 			Pattern pattern = Pattern.compile("[^0-9a-zA-Z_ ]");
 			if (beepManager != null && !pattern.matcher(barCodeStr).matches()) {
 				beepManager.playBeepSoundAndVibrate();
