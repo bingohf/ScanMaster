@@ -23,12 +23,7 @@
         android:summary="Please provide cloud server"
         android:shouldDisableView="false">
         ></Preference>
-
-    <Preference
-        android:key="helpinfo"
-        android:shouldDisableView="false"
-        android:title="@string/barcode"
-        android:summary="@string/barcode.help"/>
+    
     <Preference
         android:key="about"
         android:shouldDisableView="false"
