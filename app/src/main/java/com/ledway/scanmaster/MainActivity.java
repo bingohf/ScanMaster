@@ -1,10 +1,18 @@
 package com.ledway.scanmaster;
 
+import android.app.AlertDialog;
+import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.serialport.api.SerialPort;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,8 +32,13 @@ import com.google.zxing.integration.android.IntentResult;
 import com.ledway.scanmaster.data.DBCommand;
 import com.ledway.scanmaster.data.Settings;
 import com.ledway.scanmaster.ui.AppPreferences;
+import com.zkc.Service.CaptureService;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.inject.Inject;
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
@@ -40,13 +53,68 @@ public class MainActivity extends AppCompatActivity {
   private DBCommand dbCommand = new DBCommand();
   private CompositeSubscription mSubscriptions = new CompositeSubscription();
   private EditText mCurrEdit;
+  private Vibrator vibrator;
+  private BroadcastReceiver scanBroadcastReceiver;
+  private BroadcastReceiver sysBroadcastReceiver;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    vibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
     ((MApp) getApplication()).getAppComponet().inject(this);
     settingChanged();
+
+    listenKeyCode();
+    receiveZkcCode();
+    CaptureService.scanGpio.openPower();
+  }
+
+  private void receiveZkcCode() {
+     scanBroadcastReceiver = new BroadcastReceiver() {
+
+      @Override public void onReceive(Context context, Intent intent) {
+        String text = intent.getExtras().getString("code");
+        Timber.v(text);
+        if (text.length() < 10) {
+          Toast.makeText(MainActivity.this, R.string.invalid_barcode, Toast.LENGTH_LONG).show();
+        }
+        Pattern pattern = Pattern.compile("[^0-9a-zA-Z_ ]");
+        if (!pattern.matcher(text).matches()) {
+          if(mCurrEdit != null){
+            receiveCode(text);
+          }
+        } else {
+          vibrator.vibrate(1000);
+        }
+      }
+    };
+    IntentFilter intentFilter = new IntentFilter();
+    intentFilter.addAction("com.zkc.scancode");
+    registerReceiver(scanBroadcastReceiver, intentFilter);
+  }
+
+  private void listenKeyCode() {
+
+    sysBroadcastReceiver = new BroadcastReceiver() {
+      @Override public void onReceive(Context context, Intent intent) {
+        String action = intent.getAction();
+        Timber.v("action_test");
+        if (action.equals("com.zkc.keycode")) {
+        } else if (action.equals("android.intent.action.SCREEN_ON")) {
+        } else if (action.equals("android.intent.action.SCREEN_OFF")) {
+          closeScan();
+        } else if (action.equals("android.intent.action.ACTION_SHUTDOWN")) {
+
+        }
+      }
+    };
+    IntentFilter screenStatusIF = new IntentFilter();
+    screenStatusIF.addAction(Intent.ACTION_SCREEN_ON);
+    screenStatusIF.addAction(Intent.ACTION_SCREEN_OFF);
+    screenStatusIF.addAction(Intent.ACTION_SHUTDOWN);
+    screenStatusIF.addAction("com.zkc.keycode");
+    registerReceiver(sysBroadcastReceiver,screenStatusIF);
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -103,12 +171,16 @@ public class MainActivity extends AppCompatActivity {
   @Override protected void onDestroy() {
     super.onDestroy();
     mSubscriptions.clear();
+    closeScan();
+    unregisterReceiver(scanBroadcastReceiver);
+    unregisterReceiver(sysBroadcastReceiver);
   }
 
   @OnClick(R.id.btn_camera_scan_bill) void onBillCameraClick() {
     mCurrEdit = mTxtBill;
     mCurrEdit.requestFocus();
     new IntentIntegrator(this).initiateScan();
+
   }
 
   @OnClick(R.id.btn_camera_scan_barcode) void onBarCodeCameraClick() {
@@ -144,6 +216,20 @@ public class MainActivity extends AppCompatActivity {
     return true;
   }
 
+  @OnClick(R.id.btn_scan) void onBtnScanClick(){
+    SerialPort.CleanBuffer();
+    CaptureService.scanGpio.openScan();
+  }
+  private void closeScan(){
+    CaptureService.scanGpio.closeScan();
+    CaptureService.scanGpio.closePower();
+  }
+
+  @Override protected void onStop() {
+    super.onStop();
+    closeScan();
+  }
+
   private void queryBarCode() {
     String billNo = mTxtBill.getText().toString();
     String barCode = mTxtBarcode.getText().toString();
@@ -162,6 +248,24 @@ public class MainActivity extends AppCompatActivity {
         .unsubscribeOn(AndroidSchedulers.mainThread())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(this::showDetail, this::showWarning));
+  }
+
+  private void exitActivity() {
+    new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert)
+        .setTitle(R.string.exit)
+        .setMessage(R.string.exit_confirm)
+        .setPositiveButton(R.string.yes, (dialog, which) -> {
+
+          CaptureService.scanGpio.closeScan();
+          CaptureService.scanGpio.closePower();
+          finish();
+        })
+        .setNegativeButton(R.string.no, null)
+        .show();
+  }
+
+  @Override public void onBackPressed() {
+    exitActivity();
   }
 
   private void showDetail(String s) {
