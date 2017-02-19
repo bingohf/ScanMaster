@@ -33,7 +33,7 @@
           android:imeOptions="actionSearch"
           android:maxLength="20"
           android:singleLine="true"
-          android:textSize="30sp"
+          android:textSize="20sp"
           android:textStyle="bold"
           />
       <ImageButton
@@ -69,7 +69,7 @@
           android:imeOptions="actionSearch"
           android:maxLength="20"
           android:singleLine="true"
-          android:textSize="30sp"
+          android:textSize="20sp"
           android:textStyle="bold"
           />
       <ImageButton

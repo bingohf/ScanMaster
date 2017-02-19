@@ -1,10 +1,8 @@
 package com.ledway.scanmaster;
 
-
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -13,7 +11,6 @@ import android.serialport.api.SerialPort;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,12 +31,9 @@ import com.ledway.scanmaster.data.DBCommand;
 import com.ledway.scanmaster.data.Settings;
 import com.ledway.scanmaster.ui.AppPreferences;
 import com.zkc.Service.CaptureService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
-import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
@@ -72,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void receiveZkcCode() {
-     scanBroadcastReceiver = new BroadcastReceiver() {
+    scanBroadcastReceiver = new BroadcastReceiver() {
 
       @Override public void onReceive(Context context, Intent intent) {
         String text = intent.getExtras().getString("code");
@@ -82,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         }
         Pattern pattern = Pattern.compile("[^0-9a-zA-Z_ ]");
         if (!pattern.matcher(text).matches()) {
-          if(mCurrEdit != null){
+          if (mCurrEdit != null) {
             receiveCode(text);
           }
         } else {
@@ -115,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     screenStatusIF.addAction(Intent.ACTION_SCREEN_OFF);
     screenStatusIF.addAction(Intent.ACTION_SHUTDOWN);
     screenStatusIF.addAction("com.zkc.keycode");
-    registerReceiver(sysBroadcastReceiver,screenStatusIF);
+    registerReceiver(sysBroadcastReceiver, screenStatusIF);
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -181,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
     mCurrEdit = mTxtBill;
     mCurrEdit.requestFocus();
     new IntentIntegrator(this).initiateScan();
-
   }
 
   @OnClick(R.id.btn_camera_scan_barcode) void onBarCodeCameraClick() {
@@ -217,11 +210,12 @@ public class MainActivity extends AppCompatActivity {
     return true;
   }
 
-  @OnClick(R.id.btn_scan) void onBtnScanClick(){
+  @OnClick(R.id.btn_scan) void onBtnScanClick() {
     SerialPort.CleanBuffer();
     CaptureService.scanGpio.openScan();
   }
-  private void closeScan(){
+
+  private void closeScan() {
     CaptureService.scanGpio.closeScan();
     CaptureService.scanGpio.closePower();
   }
@@ -291,10 +285,11 @@ public class MainActivity extends AppCompatActivity {
     Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     alertWarning(message);
   }
-  private void alertWarning(String message){
+
+  private void alertWarning(String message) {
     String msg = message.replaceAll("^!+", "");
     int vibratorLen = message.length() - msg.length();
-    if (vibratorLen >0 ) {
+    if (vibratorLen > 0) {
       long[] vv = new long[vibratorLen * 2];
       for (int i = 0; i < vv.length / 2; ++i) {
         vv[i * 2] = 300;
@@ -305,7 +300,8 @@ public class MainActivity extends AppCompatActivity {
       builder.setTitle(R.string.warning)
           .setMessage(msg)
           .setPositiveButton(R.string.ok, null)
-          .create().show();
+          .create()
+          .show();
     }
   }
 }
