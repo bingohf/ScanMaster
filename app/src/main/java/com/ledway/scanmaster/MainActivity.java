@@ -1,6 +1,6 @@
 package com.ledway.scanmaster;
 
-import android.app.AlertDialog;
+
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.serialport.api.SerialPort;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -255,9 +256,6 @@ public class MainActivity extends AppCompatActivity {
         .setTitle(R.string.exit)
         .setMessage(R.string.exit_confirm)
         .setPositiveButton(R.string.yes, (dialog, which) -> {
-
-          CaptureService.scanGpio.closeScan();
-          CaptureService.scanGpio.closePower();
           finish();
         })
         .setNegativeButton(R.string.no, null)
@@ -270,6 +268,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void showDetail(String s) {
     mTxtResponse.setText(s);
+    alertWarning(s);
   }
 
   private void queryBill() {
@@ -290,5 +289,23 @@ public class MainActivity extends AppCompatActivity {
 
   private void showWarning(String message) {
     Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    alertWarning(message);
+  }
+  private void alertWarning(String message){
+    String msg = message.replaceAll("^!+", "");
+    int vibratorLen = message.length() - msg.length();
+    if (vibratorLen >0 ) {
+      long[] vv = new long[vibratorLen * 2];
+      for (int i = 0; i < vv.length / 2; ++i) {
+        vv[i * 2] = 300;
+        vv[i * 2 + 1] = 100;
+      }
+      vibrator.vibrate(vv, -1);
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setTitle(R.string.warning)
+          .setMessage(msg)
+          .setPositiveButton(R.string.ok, null)
+          .create().show();
+    }
   }
 }

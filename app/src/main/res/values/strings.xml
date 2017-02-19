@@ -71,5 +71,6 @@
   <string name="goto_setting">進入設置</string>
   <string name="setting">設置</string>
   <string name="uploading">正在上傳(uploading)</string>
+  <string name="warning">Warning</string>
 
 </resources>
