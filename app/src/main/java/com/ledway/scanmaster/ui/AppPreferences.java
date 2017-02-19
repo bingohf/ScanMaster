@@ -96,13 +96,11 @@ public class AppPreferences extends PreferenceActivity
       EditText editText = new EditText(AppPreferences.this);
       editText.setText(preference.getSummary());
       AlertDialog.Builder builder = new AlertDialog.Builder(AppPreferences.this);
-      builder.setTitle(R.string.setting_server_title)
+      builder.setTitle(preference.getTitle())
           .setView(editText)
-          .setPositiveButton(R.string.ok_button, new DialogInterface.OnClickListener() {
-            @Override public void onClick(DialogInterface dialogInterface, int i) {
-              preference.setSummary(editText.getText().toString());
-              preferenceInterface.setValue(editText.getText().toString());
-            }
+          .setPositiveButton(R.string.ok_button, (dialogInterface, i) -> {
+            preference.setSummary(editText.getText().toString());
+            preferenceInterface.setValue(editText.getText().toString());
           })
           .setNegativeButton(R.string.cancel_button, (dialogInterface, i) -> {
 
