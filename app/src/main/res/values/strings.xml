@@ -62,7 +62,7 @@
   <string name="yes">是(Yes)</string>
   <string name="no">否(No)</string>
   <string name="barcode_invalid">條碼不正確，請重新掃碼</string>
-  <string name="scan.btn">掃描 (Scan)</string>
+  <string name="scan.btn">PDA掃描器 (Scan)</string>
   <string name="had_to_mifare">此條碼已經錄入</string>
   <string name="ok">確認(OK)</string>
   <string name="cancel">取消(Cancel)</string>

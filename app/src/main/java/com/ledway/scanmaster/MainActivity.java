@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         String action = intent.getAction();
         Timber.v("action_test");
         if (action.equals("com.zkc.keycode")) {
+          hideInputMethod();
         } else if (action.equals("android.intent.action.SCREEN_ON")) {
         } else if (action.equals("android.intent.action.SCREEN_OFF")) {
           closeScan();
@@ -118,6 +119,14 @@ public class MainActivity extends AppCompatActivity {
     screenStatusIF.addAction(Intent.ACTION_SHUTDOWN);
     screenStatusIF.addAction("com.zkc.keycode");
     registerReceiver(sysBroadcastReceiver, screenStatusIF);
+  }
+
+  private void hideInputMethod() {
+    if (mCurrEdit != null) {
+      InputMethodManager inputMethodManager =
+          (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+      inputMethodManager.hideSoftInputFromWindow(mCurrEdit.getWindowToken(), 0);
+    }
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -155,19 +164,21 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void receiveCode(String code) {
+
+    hideInputMethod();
     try {
-      validBarCode(code);
       if (mCurrEdit != null) {
         mCurrEdit.setText(code);
+        mCurrEdit.selectAll();
         if (mCurrEdit.getId() == R.id.txt_bill_no) {
           queryBill();
-        } else if (mCurrEdit.getId() == R.id.txt_barcode) queryBarCode();
+        } else if (mCurrEdit.getId() == R.id.txt_barcode) {
+          queryBarCode();
+        }
       }
-    } catch (InvalidBarCodeException e) {
-      e.printStackTrace();
+    }catch (InvalidBarCodeException e){
       Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
-
   }
 
   private void validBarCode(String barcode) throws InvalidBarCodeException {
@@ -214,18 +225,21 @@ public class MainActivity extends AppCompatActivity {
 
   @OnEditorAction({ R.id.txt_barcode, R.id.txt_bill_no }) boolean onEditAction(TextView view,
       int actionId, KeyEvent keyEvent) {
-    if (actionId == EditorInfo.IME_ACTION_SEARCH
-        || keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-      switch (view.getId()) {
-        case R.id.txt_bill_no: {
-          queryBill();
-          break;
-        }
-        case R.id.txt_barcode: {
-          queryBarCode();
-          break;
+    try {
+      if (actionId == EditorInfo.IME_ACTION_SEARCH || keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+        switch (view.getId()) {
+          case R.id.txt_bill_no: {
+            queryBill();
+            break;
+          }
+          case R.id.txt_barcode: {
+            queryBarCode();
+            break;
+          }
         }
       }
+    }catch (InvalidBarCodeException e){
+      Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
     InputMethodManager inputMethodManager =
         (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -252,10 +266,11 @@ public class MainActivity extends AppCompatActivity {
     closeScan();
   }
 
-  private void queryBarCode() {
+  private void queryBarCode() throws InvalidBarCodeException {
     String billNo = mTxtBill.getText().toString();
     String barCode = mTxtBarcode.getText().toString();
-
+    validBarCode(billNo);
+    validBarCode(barCode);
     mSubscriptions.add(dbCommand.rxExecute("{call sp_getDetail(?,?,?,?,?)}", settings.getLine(),
         settings.getReader(), billNo, barCode)
         .subscribeOn(Schedulers.io())
@@ -294,8 +309,9 @@ public class MainActivity extends AppCompatActivity {
     alertWarning(s);
   }
 
-  private void queryBill() {
+  private void queryBill() throws InvalidBarCodeException {
     String billNo = mTxtBill.getText().toString();
+    validBarCode(billNo);
     mSubscriptions.add(
         dbCommand.rxExecute("{call sp_getBill(?,?,?,?)}", settings.getLine(), settings.getReader(),
             billNo)
