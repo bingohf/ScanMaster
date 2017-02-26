@@ -79,14 +79,7 @@ public class MainActivity extends AppCompatActivity {
         if (text.length() < 10) {
           Toast.makeText(MainActivity.this, R.string.invalid_barcode, Toast.LENGTH_LONG).show();
         }
-        Pattern pattern = Pattern.compile("[^0-9a-zA-Z_ ]");
-        if (!pattern.matcher(text).matches()) {
-          if (mCurrEdit != null) {
-            receiveCode(text);
-          }
-        } else {
-          vibrator.vibrate(1000);
-        }
+        receiveCode(text);
         mSubscriptions.add(Observable.timer(2, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(l -> openScan()));
