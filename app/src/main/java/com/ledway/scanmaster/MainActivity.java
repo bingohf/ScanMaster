@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void validBarCode(String barcode) throws InvalidBarCodeException {
-    Pattern pattern = Pattern.compile("^[0-9a-zA-Z]+$");
+    Pattern pattern = Pattern.compile("^[0-9a-zA-Z]*$");
     if (!pattern.matcher(barcode).matches()) {
       throw new InvalidBarCodeException();
     }
