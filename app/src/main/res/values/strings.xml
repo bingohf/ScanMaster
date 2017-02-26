@@ -31,7 +31,7 @@
   <string name="setting.autoupload.title">自動上傳(Auto Upload)</string>
   <string name="setting.type.title">Type</string>
   <string name="empty"/>
-  <string name="invalid_barcode">條碼不全(Invalid Code)</string>
+  <string name="invalid_barcode">條碼不全(Barcode Error)</string>
   <string name="app_version">App Version</string>
 
 
@@ -72,5 +72,6 @@
   <string name="setting">設置</string>
   <string name="uploading">正在上傳(uploading)</string>
   <string name="warning">Warning</string>
+  <string name="ledway">威虹Scan Master</string>
 
 </resources>

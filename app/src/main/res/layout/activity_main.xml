@@ -33,8 +33,9 @@
           android:imeOptions="actionSearch"
           android:maxLength="20"
           android:singleLine="true"
-          android:textSize="20sp"
+          android:textSize="24sp"
           android:textStyle="bold"
+          android:digits="012345789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
           />
       <ImageButton
           android:id="@+id/btn_camera_scan_bill"
@@ -69,8 +70,9 @@
           android:imeOptions="actionSearch"
           android:maxLength="20"
           android:singleLine="true"
-          android:textSize="20sp"
+          android:textSize="24sp"
           android:textStyle="bold"
+          android:digits="012345789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
           />
       <ImageButton
           android:id="@+id/btn_camera_scan_barcode"

@@ -31,6 +31,7 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.ledway.scanmaster.data.DBCommand;
 import com.ledway.scanmaster.data.Settings;
+import com.ledway.scanmaster.domain.InvalidBarCodeException;
 import com.ledway.scanmaster.ui.AppPreferences;
 import com.zkc.Service.CaptureService;
 import java.util.concurrent.TimeUnit;
@@ -154,11 +155,25 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void receiveCode(String code) {
-    if (mCurrEdit != null) {
-      mCurrEdit.setText(code);
-      if (mCurrEdit.getId() == R.id.txt_bill_no) {
-        queryBill();
-      } else if (mCurrEdit.getId() == R.id.txt_barcode) queryBarCode();
+    try {
+      validBarCode(code);
+      if (mCurrEdit != null) {
+        mCurrEdit.setText(code);
+        if (mCurrEdit.getId() == R.id.txt_bill_no) {
+          queryBill();
+        } else if (mCurrEdit.getId() == R.id.txt_barcode) queryBarCode();
+      }
+    } catch (InvalidBarCodeException e) {
+      e.printStackTrace();
+      Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+    }
+
+  }
+
+  private void validBarCode(String barcode) throws InvalidBarCodeException {
+    Pattern pattern = Pattern.compile("^[0-9a-zA-Z]+$");
+    if (!pattern.matcher(barcode).matches()) {
+      throw new InvalidBarCodeException();
     }
   }
 
@@ -199,7 +214,8 @@ public class MainActivity extends AppCompatActivity {
 
   @OnEditorAction({ R.id.txt_barcode, R.id.txt_bill_no }) boolean onEditAction(TextView view,
       int actionId, KeyEvent keyEvent) {
-    if (actionId == EditorInfo.IME_ACTION_SEARCH || keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+    if (actionId == EditorInfo.IME_ACTION_SEARCH
+        || keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
       switch (view.getId()) {
         case R.id.txt_bill_no: {
           queryBill();
@@ -273,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void showDetail(String s) {
     Timber.v(s);
-    mWebResponse.loadData(s,"text/html; charset=utf-8","UTF-8");
+    mWebResponse.loadData(s, "text/html; charset=utf-8", "UTF-8");
     mWebResponse.setBackgroundColor(Color.parseColor("#eeeeee"));
     alertWarning(s);
   }

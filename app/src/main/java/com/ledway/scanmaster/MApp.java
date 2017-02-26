@@ -11,12 +11,12 @@ import timber.log.Timber;
 
 public class MApp extends Application {
   private AppComponent appComponent;
-
+  private static MApp sInstance;
   @Override public void onCreate() {
     super.onCreate();
     Timber.plant(new Timber.DebugTree());
     appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
-
+    sInstance = this;
     startScanService();
   }
 
@@ -29,4 +29,8 @@ public class MApp extends Application {
   public AppComponent getAppComponet(){
     return appComponent;
   }
+  public static MApp getInstance(){
+    return sInstance;
+  }
+
 }
