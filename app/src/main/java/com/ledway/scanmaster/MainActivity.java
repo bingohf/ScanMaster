@@ -172,7 +172,11 @@ public class MainActivity extends AppCompatActivity {
 
     hideInputMethod();
     try {
-      if (mCurrEdit != null && mCurrEdit.isEnabled()) {
+      if(mCurrEdit == null){
+        mTxtBarcode.requestFocus();
+        mCurrEdit = mTxtBarcode;
+      }
+      if (mCurrEdit.isEnabled()) {
         mCurrEdit.setText(code);
         mCurrEdit.selectAll();
         if (mCurrEdit.getId() == R.id.txt_bill_no) {
@@ -180,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (mCurrEdit.getId() == R.id.txt_barcode) {
           queryBarCode();
         }
+        mTxtBarcode.requestFocus();
       }
     } catch (InvalidBarCodeException e) {
       Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
