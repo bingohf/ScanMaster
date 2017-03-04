@@ -19,6 +19,14 @@ public class MApp extends Application {
     appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
     sInstance = this;
     startScanService();
+    crashLog();
+  }
+
+  private void crashLog() {
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+      Timber.v("Crashed : %s - %d", thread.getName(), thread.getId());
+      Timber.e(throwable, throwable.getMessage());
+    });
   }
 
   private void startScanService() {
