@@ -14,8 +14,8 @@ android {
     applicationId "com.ledway.scanmaster"
     minSdkVersion rootProject.ext.minSdkVersion
     targetSdkVersion rootProject.ext.targetSdkVersion
-    versionCode 14
-    versionName "1.4"
+    versionCode 15
+    versionName "1.5"
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
   }
 
@@ -87,6 +87,7 @@ dependencies {
   compile 'com.jakewharton:butterknife:8.5.1'
   annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
 
+  compile 'com.jakewharton.rxbinding:rxbinding:1.0.1'
 
   compile 'com.journeyapps:zxing-android-embedded:3.4.0'
 }

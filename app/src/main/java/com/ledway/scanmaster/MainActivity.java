@@ -25,13 +25,14 @@ import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.OnEditorAction;
 import butterknife.OnFocusChange;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+import com.jakewharton.rxbinding.widget.RxTextView;
 import com.ledway.scanmaster.data.DBCommand;
 import com.ledway.scanmaster.data.Settings;
 import com.ledway.scanmaster.domain.InvalidBarCodeException;
+import com.ledway.scanmaster.interfaces.IDGenerator;
 import com.ledway.scanmaster.ui.AppPreferences;
 import com.zkc.Service.CaptureService;
 import java.util.concurrent.TimeUnit;
@@ -43,9 +44,12 @@ import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
+import static android.view.KeyEvent.ACTION_UP;
+
 public class MainActivity extends AppCompatActivity {
   private static final int REQUEST_SET = 1;
   @Inject Settings settings;
+  @Inject IDGenerator mIDGenerator;
   @BindView(R.id.txt_bill_no) EditText mTxtBill;
   @BindView(R.id.txt_barcode) EditText mTxtBarcode;
   @BindView(R.id.prg_loading) View mLoading;
@@ -67,7 +71,17 @@ public class MainActivity extends AppCompatActivity {
 
     listenKeyCode();
     receiveZkcCode();
+
+    mSubscriptions.add(Observable.merge(RxTextView.editorActionEvents(mTxtBarcode),
+        RxTextView.editorActionEvents(mTxtBill))
+        .debounce(500, TimeUnit.MILLISECONDS)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(actionEvent -> {
+          onEditAction(actionEvent.view(), actionEvent.actionId(), actionEvent.keyEvent());
+        }));
     CaptureService.scanGpio.openPower();
+
+    Timber.v(mIDGenerator.genID());
   }
 
   private void receiveZkcCode() {
@@ -95,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     sysBroadcastReceiver = new BroadcastReceiver() {
       @Override public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        Timber.v("action_test");
+        Timber.v(action);
         if (action.equals("com.zkc.keycode")) {
           hideInputMethod();
         } else if (action.equals("android.intent.action.SCREEN_ON")) {
@@ -169,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
           queryBarCode();
         }
       }
-    }catch (InvalidBarCodeException e){
+    } catch (InvalidBarCodeException e) {
       Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
   }
@@ -216,10 +230,11 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  @OnEditorAction({ R.id.txt_barcode, R.id.txt_bill_no }) boolean onEditAction(TextView view,
-      int actionId, KeyEvent keyEvent) {
+  boolean onEditAction(TextView view, int actionId, KeyEvent keyEvent) {
     try {
-      if (actionId == EditorInfo.IME_ACTION_SEARCH || keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+      if (actionId == EditorInfo.IME_ACTION_SEARCH || (keyEvent.getAction() == ACTION_UP
+          && keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+        Timber.v("edit action");
         switch (view.getId()) {
           case R.id.txt_bill_no: {
             queryBill();
@@ -231,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
           }
         }
       }
-    }catch (InvalidBarCodeException e){
+    } catch (InvalidBarCodeException e) {
       Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
     InputMethodManager inputMethodManager =
@@ -264,19 +279,20 @@ public class MainActivity extends AppCompatActivity {
     String barCode = mTxtBarcode.getText().toString();
     validBarCode(billNo);
     validBarCode(barCode);
-    mSubscriptions.add(dbCommand.rxExecute("{call sp_getDetail(?,?,?,?,?)}", settings.getLine(),
-        settings.getReader(), billNo, barCode)
+    mTxtBarcode.setEnabled(false);
+    mLoading.setVisibility(View.VISIBLE);
+    mWebResponse.setVisibility(View.GONE);
+    Timber.v("start_query");
+    mSubscriptions.add(dbCommand.rxExecute("{call sp_getDetail(?,?,?,?,?,?)}", settings.getLine(),
+        settings.getReader(), billNo, barCode, mIDGenerator.genID())
         .subscribeOn(Schedulers.io())
-        .doOnSubscribe(() -> {
-          mLoading.setVisibility(View.VISIBLE);
-          mWebResponse.setVisibility(View.GONE);
-        })
+        .observeOn(AndroidSchedulers.mainThread())
         .doOnUnsubscribe(() -> {
           mLoading.setVisibility(View.GONE);
           mWebResponse.setVisibility(View.VISIBLE);
+          mTxtBarcode.setEnabled(true);
+          Timber.v("end_query");
         })
-        .unsubscribeOn(AndroidSchedulers.mainThread())
-        .observeOn(AndroidSchedulers.mainThread())
         .subscribe(this::showDetail, this::showWarning));
   }
 
@@ -284,9 +300,7 @@ public class MainActivity extends AppCompatActivity {
     new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert)
         .setTitle(R.string.exit)
         .setMessage(R.string.exit_confirm)
-        .setPositiveButton(R.string.yes, (dialog, which) -> {
-          finish();
-        })
+        .setPositiveButton(R.string.yes, (dialog, which) -> finish())
         .setNegativeButton(R.string.no, null)
         .show();
   }
