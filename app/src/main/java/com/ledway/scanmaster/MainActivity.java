@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     vibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
+    mWebResponse.getSettings().setJavaScriptEnabled(false);
     ((MApp) getApplication()).getAppComponet().inject(this);
     settingChanged();
 
