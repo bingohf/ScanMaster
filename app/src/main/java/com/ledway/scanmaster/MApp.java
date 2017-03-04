@@ -2,6 +2,7 @@ package com.ledway.scanmaster;
 
 import android.app.Application;
 import android.content.Intent;
+import com.ledway.scanmaster.utils.LogDebugTree;
 import com.zkc.Service.CaptureService;
 import timber.log.Timber;
 
@@ -14,7 +15,7 @@ public class MApp extends Application {
   private static MApp sInstance;
   @Override public void onCreate() {
     super.onCreate();
-    Timber.plant(new Timber.DebugTree());
+    Timber.plant(new LogDebugTree(this));
     appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
     sInstance = this;
     startScanService();
