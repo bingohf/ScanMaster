@@ -11,7 +11,6 @@ import android.os.Vibrator;
 import android.serialport.api.SerialPort;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -293,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
           mTxtBarcode.setEnabled(true);
           Timber.v("end_query");
         })
-        .subscribe(this::showDetail, this::showWarning));
+        .subscribe(this::showResponse, this::showWarning));
   }
 
   private void exitActivity() {
@@ -309,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
     exitActivity();
   }
 
-  private void showDetail(String s) {
+  private void showResponse(String s) {
     Timber.v(s);
     mWebResponse.loadData(s, "text/html; charset=utf-8", "UTF-8");
     mWebResponse.setBackgroundColor(Color.parseColor("#eeeeee"));
@@ -319,13 +318,20 @@ public class MainActivity extends AppCompatActivity {
   private void queryBill() throws InvalidBarCodeException {
     String billNo = mTxtBill.getText().toString();
     validBarCode(billNo);
+    mTxtBill.setEnabled(false);
+    mLoading.setVisibility(View.VISIBLE);
+    mWebResponse.setVisibility(View.GONE);
     mSubscriptions.add(
         dbCommand.rxExecute("{call sp_getBill(?,?,?,?)}", settings.getLine(), settings.getReader(),
             billNo)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .filter(str -> !TextUtils.isEmpty(str))
-            .subscribe(this::showWarning, this::showWarning));
+            .doOnUnsubscribe(() -> {
+              mTxtBill.setEnabled(true);
+              mLoading.setVisibility(View.GONE);
+              mWebResponse.setVisibility(View.VISIBLE);
+            })
+            .subscribe(this::showResponse, this::showWarning));
   }
 
   private void showWarning(Throwable throwable) {
