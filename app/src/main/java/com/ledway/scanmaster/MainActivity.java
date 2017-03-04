@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
   private void showResponse(String s) {
     Timber.v(s);
     mWebResponse.loadData(s, "text/html; charset=utf-8", "UTF-8");
-    mWebResponse.setBackgroundColor(Color.parseColor("#eeeeee"));
+    //mWebResponse.setBackgroundColor(Color.parseColor("#eeeeee"));
     alertWarning(s);
   }
 
