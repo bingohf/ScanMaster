@@ -73,8 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     mSubscriptions.add(Observable.merge(RxTextView.editorActionEvents(mTxtBarcode),
         RxTextView.editorActionEvents(mTxtBill))
-        .debounce(500, TimeUnit.MILLISECONDS)
-        .observeOn(AndroidSchedulers.mainThread())
+       // .observeOn(AndroidSchedulers.mainThread())
         .subscribe(actionEvent -> {
           onEditAction(actionEvent.view(), actionEvent.actionId(), actionEvent.keyEvent());
         }));
@@ -173,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
 
     hideInputMethod();
     try {
-      if (mCurrEdit != null) {
+      if (mCurrEdit != null && mCurrEdit.isEnabled()) {
         mCurrEdit.setText(code);
         mCurrEdit.selectAll();
         if (mCurrEdit.getId() == R.id.txt_bill_no) {
@@ -231,9 +230,9 @@ public class MainActivity extends AppCompatActivity {
 
   boolean onEditAction(TextView view, int actionId, KeyEvent keyEvent) {
     try {
-      if (actionId == EditorInfo.IME_ACTION_SEARCH || (keyEvent.getAction() == ACTION_UP
-          && keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
-        Timber.v("edit action");
+      Timber.v("onEditAction");
+      if (view.isEnabled() && (actionId == EditorInfo.IME_ACTION_SEARCH || ( keyEvent.getAction()
+          == ACTION_UP && keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER))) {
         switch (view.getId()) {
           case R.id.txt_bill_no: {
             queryBill();
