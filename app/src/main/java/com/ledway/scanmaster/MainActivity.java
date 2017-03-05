@@ -78,8 +78,6 @@ public class MainActivity extends AppCompatActivity {
         .subscribe(actionEvent -> {
           onEditAction(actionEvent.view(), actionEvent.actionId(), actionEvent.keyEvent());
         }));
-    CaptureService.scanGpio.openPower();
-
     Timber.v(mIDGenerator.genID());
   }
 
@@ -271,6 +269,11 @@ public class MainActivity extends AppCompatActivity {
   private void closeScan() {
     CaptureService.scanGpio.closeScan();
     CaptureService.scanGpio.closePower();
+  }
+
+  @Override protected void onStart() {
+    super.onStart();
+    CaptureService.scanGpio.openPower();
   }
 
   @Override protected void onStop() {
