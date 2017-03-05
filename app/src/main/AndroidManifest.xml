@@ -33,7 +33,7 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
-    <activity android:name=".ui.AppPreferences">
+    <activity android:name=".setting.AppPreferences">
     </activity>
 
     <activity

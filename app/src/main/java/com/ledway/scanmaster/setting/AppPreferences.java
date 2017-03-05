@@ -1,6 +1,5 @@
-package com.ledway.scanmaster.ui;
+package com.ledway.scanmaster.setting;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -12,7 +11,6 @@ import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
-import android.preference.PreferenceManager;
 import android.preference.TwoStatePreference;
 import android.support.v7.app.AlertDialog;
 import android.widget.EditText;
@@ -21,19 +19,22 @@ import com.ledway.scanmaster.MApp;
 import com.ledway.scanmaster.R;
 import com.ledway.scanmaster.data.Settings;
 import javax.inject.Inject;
-import rx.Observable;
 
 /**
  * Created by togb on 2016/4/10.
  */
 public class AppPreferences extends PreferenceActivity
     implements SharedPreferences.OnSharedPreferenceChangeListener {
-  private Preference mPfServer;
   @Inject Settings settings;
+  private Preference mPfServer;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    ((MApp)getApplication()).getAppComponet().inject(this);
+    DaggerSettingComponent.builder()
+        .appComponent(((MApp) getApplication()).getAppComponet())
+        .settingModule(new SettingModule())
+        .build()
+        .inject(this);
 
     addPreferencesFromResource(R.xml.preferences);
     //PreferenceManager.setDefaultValues(AppPreferences.this, R.xml.preferences, false);
@@ -47,7 +48,6 @@ public class AppPreferences extends PreferenceActivity
         settings.setServer(newValue);
       }
     });
-
 
     setPreference(findPreference("DB"), new PreferenceInterface() {
       @Override public String getValue() {
@@ -80,8 +80,6 @@ public class AppPreferences extends PreferenceActivity
     });
     //nitSummary(getPreferenceScreen());
 
-
-
     findPreference("about").setOnPreferenceClickListener(preference -> {
       Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + "+886222799889"));
       AppPreferences.this.startActivity(intent);
@@ -90,7 +88,7 @@ public class AppPreferences extends PreferenceActivity
     findPreference("version").setSummary(BuildConfig.VERSION_NAME);
   }
 
-  private void setPreference(Preference preference, PreferenceInterface preferenceInterface){
+  private void setPreference(Preference preference, PreferenceInterface preferenceInterface) {
     preference.setSummary(preferenceInterface.getValue());
     preference.setOnPreferenceClickListener((preference2) -> {
       EditText editText = new EditText(AppPreferences.this);
@@ -110,7 +108,6 @@ public class AppPreferences extends PreferenceActivity
       return true;
     });
   }
-
 
   private void setEnableSetting(boolean b) {
     PreferenceGroup pGrp = (PreferenceGroup) getPreferenceScreen();
@@ -167,9 +164,9 @@ public class AppPreferences extends PreferenceActivity
     }
   }
 
-  private interface PreferenceInterface{
+  private interface PreferenceInterface {
     String getValue();
+
     void setValue(String newValue);
   }
-
 }

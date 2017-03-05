@@ -2,7 +2,7 @@ package com.ledway.scanmaster;
 
 import android.content.Context;
 import com.ledway.scanmaster.data.Settings;
-import com.ledway.scanmaster.ui.AppPreferences;
+import com.ledway.scanmaster.setting.AppPreferences;
 import dagger.Component;
 import javax.inject.Singleton;
 
@@ -13,6 +13,6 @@ import javax.inject.Singleton;
 @Component(modules ={ AppModule.class})
 public interface AppComponent {
   @ApplicationContext Context context();
-  void inject(AppPreferences appPreferences);
   void inject(MainActivity mainActivity);
+  Settings settings();
 }

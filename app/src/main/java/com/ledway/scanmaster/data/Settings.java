@@ -13,11 +13,10 @@ public class Settings {
   public String line;
   public String reader;
 
-  @Inject
   public Settings(SPModel spModel){
     this.spModel = spModel;
+    restore();
   }
-  @Inject
   void restore(){
     restore(spModel.loadSetting());
   }
