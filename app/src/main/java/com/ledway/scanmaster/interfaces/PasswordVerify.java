@@ -5,5 +5,6 @@ package com.ledway.scanmaster.interfaces;
  */
 
 public interface PasswordVerify {
-  boolean verify(String input);
+  boolean verify();
+  void userPassword(String password);
 }

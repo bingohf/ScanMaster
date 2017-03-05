@@ -10,6 +10,7 @@ import timber.log.Timber;
 
 public class LedwayPaswordVerify implements PasswordVerify{
   private String mPassword;
+  private String mUserPassword ="";
 
   public LedwayPaswordVerify(){
     calcPassword();
@@ -18,13 +19,17 @@ public class LedwayPaswordVerify implements PasswordVerify{
   private void calcPassword() {
     Calendar calendar = Calendar.getInstance();
     calendar.setTimeInMillis(System.currentTimeMillis());
-    int month = calendar.get(Calendar.MONTH);
+    int month = calendar.get(Calendar.MONTH) + 1;
     mPassword = String.format("1868%d", month * month);
     Timber.v("password:%s", mPassword);
   }
 
-  @Override public boolean verify(String input) {
-    Timber.v("input:%s", input);
-    return mPassword.equals(input);
+  @Override public boolean verify() {
+    return mPassword.equals(mUserPassword);
+  }
+
+  @Override public void userPassword(String password) {
+    Timber.v("input:%s", password);
+    mUserPassword = password;
   }
 }

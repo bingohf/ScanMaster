@@ -14,10 +14,12 @@ import android.preference.PreferenceGroup;
 import android.preference.TwoStatePreference;
 import android.support.v7.app.AlertDialog;
 import android.widget.EditText;
+import android.widget.Toast;
 import com.ledway.scanmaster.BuildConfig;
 import com.ledway.scanmaster.MApp;
 import com.ledway.scanmaster.R;
 import com.ledway.scanmaster.data.Settings;
+import com.ledway.scanmaster.interfaces.PasswordVerify;
 import javax.inject.Inject;
 
 /**
@@ -26,6 +28,7 @@ import javax.inject.Inject;
 public class AppPreferences extends PreferenceActivity
     implements SharedPreferences.OnSharedPreferenceChangeListener {
   @Inject Settings settings;
+  @Inject PasswordVerify passwordVerify;
   private Preference mPfServer;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +42,7 @@ public class AppPreferences extends PreferenceActivity
     addPreferencesFromResource(R.xml.preferences);
     //PreferenceManager.setDefaultValues(AppPreferences.this, R.xml.preferences, false);
     mPfServer = findPreference("Server");
-    setPreference(mPfServer, new PreferenceInterface() {
+    setPreference(mPfServer,true, new PreferenceInterface() {
       @Override public String getValue() {
         return settings.getServer();
       }
@@ -49,7 +52,7 @@ public class AppPreferences extends PreferenceActivity
       }
     });
 
-    setPreference(findPreference("DB"), new PreferenceInterface() {
+    setPreference(findPreference("DB"),true, new PreferenceInterface() {
       @Override public String getValue() {
         return settings.getDb();
       }
@@ -89,8 +92,31 @@ public class AppPreferences extends PreferenceActivity
   }
 
   private void setPreference(Preference preference, PreferenceInterface preferenceInterface) {
+    setPreference(preference, false, preferenceInterface);
+  }
+
+  private void setPreference(Preference preference, boolean security,
+      PreferenceInterface preferenceInterface) {
     preference.setSummary(preferenceInterface.getValue());
     preference.setOnPreferenceClickListener((preference2) -> {
+      if (security && !passwordVerify.verify()) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(AppPreferences.this);
+        EditText editText = new EditText(AppPreferences.this);
+        builder.setTitle(R.string.password)
+            .setView(editText)
+            .setPositiveButton(R.string.ok, (dialogInterface, i) -> {
+              passwordVerify.userPassword(editText.getText().toString());
+              if (!passwordVerify.verify()) {
+                Toast.makeText(AppPreferences.this, R.string.invalid_password, Toast.LENGTH_LONG)
+                    .show();
+              }
+            })
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+            .show();
+        return true;
+      }
+
       EditText editText = new EditText(AppPreferences.this);
       editText.setText(preference.getSummary());
       AlertDialog.Builder builder = new AlertDialog.Builder(AppPreferences.this);

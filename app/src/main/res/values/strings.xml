@@ -73,5 +73,7 @@
   <string name="uploading">正在上傳(uploading)</string>
   <string name="warning">Warning</string>
   <string name="ledway">威虹Scan Master</string>
+  <string name="password">Password</string>
+  <string name="invalid_password">Invalid password</string>
 
 </resources>
