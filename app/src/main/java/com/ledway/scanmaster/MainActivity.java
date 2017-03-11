@@ -1,10 +1,13 @@
 package com.ledway.scanmaster;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.serialport.api.SerialPort;
@@ -31,8 +34,11 @@ import com.ledway.scanmaster.data.DBCommand;
 import com.ledway.scanmaster.data.Settings;
 import com.ledway.scanmaster.domain.InvalidBarCodeException;
 import com.ledway.scanmaster.interfaces.IDGenerator;
+import com.ledway.scanmaster.nfc.GNfc;
+import com.ledway.scanmaster.nfc.GNfcLoader;
 import com.ledway.scanmaster.setting.AppPreferences;
 import com.zkc.Service.CaptureService;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
@@ -58,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
   private Vibrator vibrator;
   private BroadcastReceiver scanBroadcastReceiver;
   private BroadcastReceiver sysBroadcastReceiver;
+  private NfcAdapter nfcAdapter;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -71,13 +78,38 @@ public class MainActivity extends AppCompatActivity {
     listenKeyCode();
     receiveZkcCode();
 
+    nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+
     mSubscriptions.add(Observable.merge(RxTextView.editorActionEvents(mTxtBarcode),
         RxTextView.editorActionEvents(mTxtBill))
-       // .observeOn(AndroidSchedulers.mainThread())
+        // .observeOn(AndroidSchedulers.mainThread())
         .subscribe(actionEvent -> {
           onEditAction(actionEvent.view(), actionEvent.actionId(), actionEvent.keyEvent());
         }));
     Timber.v(mIDGenerator.genID());
+  }
+
+  @Override protected void onStart() {
+    super.onStart();
+    CaptureService.scanGpio.openPower();
+  }
+
+  @Override protected void onStop() {
+    super.onStop();
+    closeScan();
+  }
+
+  @Override protected void onDestroy() {
+    super.onDestroy();
+    mSubscriptions.clear();
+    closeScan();
+    unregisterReceiver(scanBroadcastReceiver);
+    unregisterReceiver(sysBroadcastReceiver);
+  }
+
+  private void closeScan() {
+    CaptureService.scanGpio.closeScan();
+    CaptureService.scanGpio.closePower();
   }
 
   private void receiveZkcCode() {
@@ -124,14 +156,6 @@ public class MainActivity extends AppCompatActivity {
     registerReceiver(sysBroadcastReceiver, screenStatusIF);
   }
 
-  private void hideInputMethod() {
-    if (mCurrEdit != null) {
-      InputMethodManager inputMethodManager =
-          (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-      inputMethodManager.hideSoftInputFromWindow(mCurrEdit.getWindowToken(), 0);
-    }
-  }
-
   @Override public boolean onCreateOptionsMenu(Menu menu) {
     getMenuInflater().inflate(R.menu.menu_main, menu);
     return true;
@@ -170,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
 
     hideInputMethod();
     try {
-      if(mCurrEdit == null){
+      if (mCurrEdit == null) {
         mTxtBarcode.requestFocus();
         mCurrEdit = mTxtBarcode;
       }
@@ -189,13 +213,6 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void validBarCode(String barcode) throws InvalidBarCodeException {
-    Pattern pattern = Pattern.compile("^[0-9a-zA-Z]*$");
-    if (!pattern.matcher(barcode).matches()) {
-      throw new InvalidBarCodeException();
-    }
-  }
-
   private void settingChanged() {
     String connectionStr =
         String.format("jdbc:jtds:sqlserver://%s;DatabaseName=%s;charset=UTF8", settings.getServer(),
@@ -204,12 +221,105 @@ public class MainActivity extends AppCompatActivity {
     dbCommand.setConnectionString(connectionStr);
   }
 
-  @Override protected void onDestroy() {
-    super.onDestroy();
-    mSubscriptions.clear();
-    closeScan();
-    unregisterReceiver(scanBroadcastReceiver);
-    unregisterReceiver(sysBroadcastReceiver);
+  private void hideInputMethod() {
+    if (mCurrEdit != null) {
+      InputMethodManager inputMethodManager =
+          (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+      inputMethodManager.hideSoftInputFromWindow(mCurrEdit.getWindowToken(), 0);
+    }
+  }
+
+  private void queryBill() throws InvalidBarCodeException {
+    String billNo = mTxtBill.getText().toString();
+    validBarCode(billNo);
+    mTxtBill.setEnabled(false);
+    mLoading.setVisibility(View.VISIBLE);
+    mWebResponse.setVisibility(View.GONE);
+    mSubscriptions.add(
+        dbCommand.rxExecute("{call sp_getBill(?,?,?,?)}", settings.getLine(), settings.getReader(),
+            billNo)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnUnsubscribe(() -> {
+              mTxtBill.setEnabled(true);
+              mLoading.setVisibility(View.GONE);
+              mWebResponse.setVisibility(View.VISIBLE);
+            })
+            .subscribe(this::showResponse, this::showWarning));
+  }
+
+  private void queryBarCode() throws InvalidBarCodeException {
+    String billNo = mTxtBill.getText().toString();
+    String barCode = mTxtBarcode.getText().toString();
+    validBarCode(billNo);
+    validBarCode(barCode);
+    mTxtBarcode.setEnabled(false);
+    mLoading.setVisibility(View.VISIBLE);
+    mWebResponse.setVisibility(View.GONE);
+    Timber.v("start_query");
+    mSubscriptions.add(dbCommand.rxExecute("{call sp_getDetail(?,?,?,?,?,?)}", settings.getLine(),
+        settings.getReader(), billNo, barCode, mIDGenerator.genID())
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .doOnUnsubscribe(() -> {
+          mLoading.setVisibility(View.GONE);
+          mWebResponse.setVisibility(View.VISIBLE);
+          mTxtBarcode.setEnabled(true);
+          Timber.v("end_query");
+        })
+        .subscribe(this::showResponse, this::showWarning));
+  }
+
+  private void validBarCode(String barcode) throws InvalidBarCodeException {
+    Pattern pattern = Pattern.compile("^[0-9a-zA-Z]*$");
+    if (!pattern.matcher(barcode).matches()) {
+      throw new InvalidBarCodeException();
+    }
+  }
+
+  @Override public void onBackPressed() {
+    exitActivity();
+  }
+
+  @Override protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    if (NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction())) {
+      Tag tagFromIntent = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+      GNfc gnfc = GNfcLoader.load(tagFromIntent);
+
+      try {
+        gnfc.connect();
+        String reader = gnfc.read();
+
+        settings.setReader(reader);
+        settingChanged();
+        Toast.makeText(this,String.format("Set Reader to %s", reader) , Toast.LENGTH_LONG).show();
+      } catch (IOException e) {
+        e.printStackTrace();
+        Timber.e(e, e.getMessage());
+      }
+    }
+  }
+
+  @Override protected void onResume() {
+    super.onResume();
+
+    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+        new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+    IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
+    ndef.addCategory("*/*");
+    IntentFilter[] mFilters = new IntentFilter[] { ndef };// 过滤器
+    nfcAdapter.enableForegroundDispatch(this, pendingIntent, mFilters,
+        GNfcLoader.TechList);
+  }
+
+  private void exitActivity() {
+    new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert)
+        .setTitle(R.string.exit)
+        .setMessage(R.string.exit_confirm)
+        .setPositiveButton(R.string.yes, (dialog, which) -> finish())
+        .setNegativeButton(R.string.no, null)
+        .show();
   }
 
   @OnClick(R.id.btn_camera_scan_bill) void onBillCameraClick() {
@@ -234,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
   boolean onEditAction(TextView view, int actionId, KeyEvent keyEvent) {
     try {
       Timber.v("onEditAction");
-      if (view.isEnabled() && (actionId == EditorInfo.IME_ACTION_SEARCH || ( keyEvent.getAction()
+      if (view.isEnabled() && (actionId == EditorInfo.IME_ACTION_SEARCH || (keyEvent.getAction()
           == ACTION_UP && keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER))) {
         switch (view.getId()) {
           case R.id.txt_bill_no: {
@@ -265,90 +375,11 @@ public class MainActivity extends AppCompatActivity {
     CaptureService.scanGpio.openScan();
   }
 
-  private void closeScan() {
-    CaptureService.scanGpio.closeScan();
-    CaptureService.scanGpio.closePower();
-  }
-
-  @Override protected void onStart() {
-    super.onStart();
-    CaptureService.scanGpio.openPower();
-  }
-
-  @Override protected void onStop() {
-    super.onStop();
-    closeScan();
-  }
-
-  private void queryBarCode() throws InvalidBarCodeException {
-    String billNo = mTxtBill.getText().toString();
-    String barCode = mTxtBarcode.getText().toString();
-    validBarCode(billNo);
-    validBarCode(barCode);
-    mTxtBarcode.setEnabled(false);
-    mLoading.setVisibility(View.VISIBLE);
-    mWebResponse.setVisibility(View.GONE);
-    Timber.v("start_query");
-    mSubscriptions.add(dbCommand.rxExecute("{call sp_getDetail(?,?,?,?,?,?)}", settings.getLine(),
-        settings.getReader(), billNo, barCode, mIDGenerator.genID())
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .doOnUnsubscribe(() -> {
-          mLoading.setVisibility(View.GONE);
-          mWebResponse.setVisibility(View.VISIBLE);
-          mTxtBarcode.setEnabled(true);
-          Timber.v("end_query");
-        })
-        .subscribe(this::showResponse, this::showWarning));
-  }
-
-  private void exitActivity() {
-    new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert)
-        .setTitle(R.string.exit)
-        .setMessage(R.string.exit_confirm)
-        .setPositiveButton(R.string.yes, (dialog, which) -> finish())
-        .setNegativeButton(R.string.no, null)
-        .show();
-  }
-
-  @Override public void onBackPressed() {
-    exitActivity();
-  }
-
   private void showResponse(String s) {
     Timber.v(s);
     mWebResponse.loadData(s, "text/html; charset=utf-8", "UTF-8");
     //mWebResponse.setBackgroundColor(Color.parseColor("#eeeeee"));
     alertWarning(s);
-  }
-
-  private void queryBill() throws InvalidBarCodeException {
-    String billNo = mTxtBill.getText().toString();
-    validBarCode(billNo);
-    mTxtBill.setEnabled(false);
-    mLoading.setVisibility(View.VISIBLE);
-    mWebResponse.setVisibility(View.GONE);
-    mSubscriptions.add(
-        dbCommand.rxExecute("{call sp_getBill(?,?,?,?)}", settings.getLine(), settings.getReader(),
-            billNo)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnUnsubscribe(() -> {
-              mTxtBill.setEnabled(true);
-              mLoading.setVisibility(View.GONE);
-              mWebResponse.setVisibility(View.VISIBLE);
-            })
-            .subscribe(this::showResponse, this::showWarning));
-  }
-
-  private void showWarning(Throwable throwable) {
-    Timber.e(throwable, throwable.getMessage());
-    showWarning(throwable.getMessage());
-  }
-
-  private void showWarning(String message) {
-    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-    alertWarning(message);
   }
 
   private void alertWarning(String message) {
@@ -368,5 +399,15 @@ public class MainActivity extends AppCompatActivity {
           .create()
           .show();
     }
+  }
+
+  private void showWarning(Throwable throwable) {
+    Timber.e(throwable, throwable.getMessage());
+    showWarning(throwable.getMessage());
+  }
+
+  private void showWarning(String message) {
+    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    alertWarning(message);
   }
 }
