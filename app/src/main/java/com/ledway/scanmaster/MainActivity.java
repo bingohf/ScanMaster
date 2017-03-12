@@ -308,14 +308,13 @@ public class MainActivity extends AppCompatActivity {
 
   @Override protected void onResume() {
     super.onResume();
-
-    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-        new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
-    IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
-    ndef.addCategory("*/*");
-    IntentFilter[] mFilters = new IntentFilter[] { ndef };// 过滤器
-    nfcAdapter.enableForegroundDispatch(this, pendingIntent, mFilters,
-        GNfcLoader.TechList);
+    if(nfcAdapter != null && nfcAdapter.isEnabled()) {
+      PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
+      IntentFilter ndef = new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED);
+      ndef.addCategory("*/*");
+      IntentFilter[] mFilters = new IntentFilter[] { ndef };// 过滤器
+      nfcAdapter.enableForegroundDispatch(this, pendingIntent, mFilters, GNfcLoader.TechList);
+    }
   }
 
   private void exitActivity() {
