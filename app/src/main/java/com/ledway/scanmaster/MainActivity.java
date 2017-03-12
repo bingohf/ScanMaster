@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
   private BroadcastReceiver scanBroadcastReceiver;
   private BroadcastReceiver sysBroadcastReceiver;
   private NfcAdapter nfcAdapter;
-
+  public boolean mContinueScan = false;
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     vibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
@@ -122,9 +122,11 @@ public class MainActivity extends AppCompatActivity {
           Toast.makeText(MainActivity.this, R.string.invalid_barcode, Toast.LENGTH_LONG).show();
         }
         receiveCode(text);
-        mSubscriptions.add(Observable.timer(2, TimeUnit.SECONDS)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(l -> openScan()));
+        if (mContinueScan) {
+          mSubscriptions.add(Observable.timer(2, TimeUnit.SECONDS)
+              .observeOn(AndroidSchedulers.mainThread())
+              .subscribe(l -> openScan()));
+        }
       }
     };
     IntentFilter intentFilter = new IntentFilter();
@@ -135,10 +137,13 @@ public class MainActivity extends AppCompatActivity {
   private void listenKeyCode() {
 
     sysBroadcastReceiver = new BroadcastReceiver() {
+
+
       @Override public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         Timber.v(action);
         if (action.equals("com.zkc.keycode")) {
+          mContinueScan = false;
           hideInputMethod();
         } else if (action.equals("android.intent.action.SCREEN_ON")) {
         } else if (action.equals("android.intent.action.SCREEN_OFF")) {
@@ -367,6 +372,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   @OnClick(R.id.btn_scan) void onBtnScanClick() {
+    mContinueScan = true;
     openScan();
   }
 
