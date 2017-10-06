@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
   @BindView(R.id.txt_barcode) EditText mTxtBarcode;
   @BindView(R.id.prg_loading) View mLoading;
   @BindView(R.id.web_response) WebView mWebResponse;
+  @BindView(R.id.btn_scan) Button mBtnScan;
   private DBCommand dbCommand = new DBCommand();
   private CompositeSubscription mSubscriptions = new CompositeSubscription();
   private EditText mCurrEdit;
@@ -224,6 +226,9 @@ public class MainActivity extends AppCompatActivity {
             settings.getDb());
     Timber.v(connectionStr);
     dbCommand.setConnectionString(connectionStr);
+
+    mBtnScan.setText("PDA#" +settings.getLine()+"/" + settings.getReader());
+
   }
 
   private void hideInputMethod() {
