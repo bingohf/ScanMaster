@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
     Timber.v(connectionStr);
     dbCommand.setConnectionString(connectionStr);
 
-    mBtnScan.setText("PDA#" +settings.getLine()+"/" + settings.getReader());
+    mBtnScan.setText("PDA#" +settings.getLine()+" / " + settings.getReader());
 
   }
 

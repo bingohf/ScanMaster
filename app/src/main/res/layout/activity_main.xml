@@ -116,6 +116,7 @@
       android:layout_gravity="center_vertical"
       android:drawableLeft="@drawable/ic_barcode_black_24dp"
       android:text="@string/scan.btn"
+      android:textStyle="bold"
       />
   <LinearLayout
       android:id="@+id/my_layout"
