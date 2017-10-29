@@ -48,7 +48,7 @@
 
 
   <string name="action_settings">Set</string>
-  <string name="barcode.hint">Scan bar code</string>
+  <string name="barcode.hint">Scan  PA Barcode</string>
   <string name="billno.hint">Scan Bill or Stowage</string>
   <string name="nfc.hint">請將IC放到感應區</string>
   <string name="write_to_mifare">寫入IC卡</string>

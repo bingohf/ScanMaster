@@ -31,11 +31,11 @@
           android:layout_height="wrap_content"
           android:hint="@string/billno.hint"
           android:imeOptions="actionSearch"
-          android:maxLength="20"
+          android:maxLength="255"
           android:singleLine="true"
           android:textSize="24sp"
           android:textStyle="bold"
-          android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"
+          android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-#/~"
           />
       <ImageButton
           android:id="@+id/btn_camera_scan_bill"
@@ -68,12 +68,12 @@
           android:layout_height="wrap_content"
           android:hint="@string/barcode.hint"
           android:imeOptions="actionSearch"
-          android:maxLength="20"
+          android:maxLength="255"
           android:singleLine="true"
           android:textSize="24sp"
           android:textStyle="bold"
-          android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"
-          />
+          android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-#/~"
+      />
       <ImageButton
           android:id="@+id/btn_camera_scan_barcode"
           android:src="@drawable/ic_barcode_scan_black_24dp"
