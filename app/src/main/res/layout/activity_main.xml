@@ -35,7 +35,7 @@
           android:singleLine="true"
           android:textSize="24sp"
           android:textStyle="bold"
-          android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-#/~"
+          android:digits="@string/digits"
           />
       <ImageButton
           android:id="@+id/btn_camera_scan_bill"
@@ -72,7 +72,7 @@
           android:singleLine="true"
           android:textSize="24sp"
           android:textStyle="bold"
-          android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-#/~"
+          android:digits="@string/digits"
       />
       <ImageButton
           android:id="@+id/btn_camera_scan_barcode"

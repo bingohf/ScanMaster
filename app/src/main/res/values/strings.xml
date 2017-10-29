@@ -75,5 +75,6 @@
   <string name="ledway">威虹Scan Master</string>
   <string name="password">Password</string>
   <string name="invalid_password">Invalid password</string>
+  <string name="digits">0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-#/~.</string>
 
 </resources>
